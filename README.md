@@ -20,27 +20,27 @@ password: ElectronicLABnotebook@20!9
 
 > 5. Please follow these steps to setup a new e-labnote/Faculty’s LAB in the newly installed elabnotebook. Steps to setup new labnote for a faculty.
 
-> a) Go to **Structure -> types Export/import** links available
+> - a) Go to **Structure -> types Export/import** links available
 
-> b)  Click Export
+> - b)  Click Export
 
 copy text and change the content type machine name and then import again.
 
-> c) Create faculty role and faculty account
+> - c) Create faculty role and faculty account
 
-> d) Assign permission to that role for accessing those content type(View own, view any, edit own).
+> - d) Assign permission to that role for accessing those content type(View own, view any, edit own).
 
-> e) In "content type-faculty" post , map content type with the respective faculty. (For notification of New/Seen setup)
+> - e) In "content type-faculty" post , map content type with the respective faculty. (For notification of New/Seen setup)
 
-> f) In **Administration » Structure » Blocks -> In footer block** - "site_name_based_on_role" block, add code for the newly created role with that faculty name to show up in the website name.
+> - f) In **Administration » Structure » Blocks -> In footer block** - "site_name_based_on_role" block, add code for the newly created role with that faculty name to show up in the website name.
 
-> g) In **Administration » Configuration » User interface -> Jammer** - to remove revision log, select those content type.
+> - g) In **Administration » Configuration » User interface -> Jammer** - to remove revision log, select those content type.
 
-> h) In **People->permissions -> roles-> faculty_role** - give permission to create and edit own to the newly created role.
+> - h) In **People->permissions -> roles-> faculty_role** - give permission to create and edit own to the newly created role.
 
-> i) In **People->permissions -> roles-> faculty_role** - give search permission only to search content related to their lab
+> - i) In **People->permissions -> roles-> faculty_role** - give search permission only to search content related to their lab
 
-> j) In **Administration » Structure » Blocks -> Lab Members** , select the new faculty role to access the block.
+> - j) In **Administration » Structure » Blocks -> Lab Members** , select the new faculty role to access the block.
 
 
 -----------------------------------------------End---------------------------------------------------------------

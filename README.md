@@ -3,7 +3,7 @@
 
 Summary: E-lab notebook, which is hosted in NCBS, is based on DRUPAL CMS and it is installed on a LAMP server.
 
-Major Version : DRUPAL 7
+### Major Version : DRUPAL 7
 
 1. LAMP Server installation [Please follow any link from google to install Linux OS,Apache, Mysql,PHP]
 
@@ -11,8 +11,8 @@ Major Version : DRUPAL 7
 Link: https://www.drupal.org/docs/7/install
 
 3. Import the Code files and database to the newly installed drupal installation.
-$ource123Row
 4. Do the changes required as per your Institute/Lab requirement.
+
 Example: Site name change, admin email-id and password change.
 
 username:  admin
@@ -43,4 +43,4 @@ i) In People->permissions -> roles-> faculty_role - give search permission only 
 j) In Administration » Structure » Blocks -> Lab Members , select the new faculty role to access the block.
 
 
------------------------------------------------End-----------------------------
+-----------------------------------------------End---------------------------------------------------------------

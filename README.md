@@ -20,7 +20,7 @@ password: ElectronicLABnotebook@20!9
 
 5. Please follow these steps to setup a new e-labnote/Faculty’s LAB in the newly installed elabnotebook. Steps to setup new labnote for a faculty.
 
-a) Go to **Structure -> types Export/import** links available
+> a) Go to **Structure -> types Export/import** links available
 
 b)  Click Export
 

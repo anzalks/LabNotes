@@ -15,7 +15,7 @@ Link: https://www.drupal.org/docs/7/install
 
 Example: Site name change, admin email-id and password change.
 
-username:  admin 
+username:  admin _
 password: ElectronicLABnotebook@20!9
 
 > 5. Please follow these steps to setup a new e-labnote/Faculty’s LAB in the newly installed elabnotebook. Steps to setup new labnote for a faculty.

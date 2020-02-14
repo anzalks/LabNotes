@@ -13,6 +13,8 @@ Link: https://www.drupal.org/docs/7/install
 > 3. Import the Code files and database to the newly installed drupal installation.
 > 4. Do the changes required as per your Institute/Lab requirement.
 
+# Kindly install the database and copy the source code files to /var/www/html/ or websites path after the installation of LAMP, MySQL and Drupal.
+
 Example: Site name change, admin email-id and password change.
 
 username:  **admin**  

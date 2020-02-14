@@ -1,7 +1,7 @@
 # LabNotes
 ## Steps To folow to setup Electronic-labnotebook :-
 
-Summary: E-lab notebook, which is hosted in NCBS, is based on DRUPAL CMS and it is installed on a LAMP server.
+Summary: E-lab notebook, which is hosted, is based on DRUPAL CMS and it is installed on a LAMP server.
 
 ### Major Version : DRUPAL 7
 

@@ -1,0 +1,411 @@
+<?php
+
+
+/**
+ * @file
+ * wysiwyg_asciimath is a plugin for wysiwyg editors
+ */
+
+// For development:
+define('WWAM_USE_TEX_FILTER', 1);
+define('WWAM_USE_GRAPH_FILTER', 1);
+
+/*
+ * Get base path (account for https vs. http using Drupal logic)
+ */
+function _wysiwyg_asciimath_base_path($absolute = FALSE) {
+  if ($absolute) {
+    global $base_url;
+    return $base_url . '/';
+  }
+  return base_path();
+}
+
+/*
+ * Default URL path to mimetex CGI module.
+ */
+function _wysiwyg_asciimath_mimetex_path_var_default() {
+//  return '/cgi-bin/mimetex.cgi';
+  return drupal_get_path('module', 'wysiwyg_asciimath') . '/mimetex/mimetex.cgi';
+}
+
+/*
+ * Get configuration variable for URL path to mimetex CGI module.
+ */
+function _wysiwyg_asciimath_mimetex_path_var() {
+  return variable_get('wysiwyg_asciimath_cgi', _wysiwyg_asciimath_mimetex_path_var_default());
+}
+
+/*
+ * URL path to mimetex CGI module. Takes into account options of:
+ * - external server (user set var to start with 'http')
+ * - our server / http access
+ * - our server / https access (via _wysiwyg_asciimath_base_path)
+ */
+function _wysiwyg_asciimath_mimetex_path($absolute = FALSE) {
+  $mimetex_path = _wysiwyg_asciimath_mimetex_path_var();
+  // If user entered full URL starting with 'http' - it is for mimetex
+  // hosted on a different server. Then we don't touch it.
+  if (!preg_match('/^http/i', $mimetex_path)) {
+    // It is on our server - add correct prefix
+    $mimetex_path = _wysiwyg_asciimath_base_path($absolute) . $mimetex_path;
+  }
+  return $mimetex_path;
+}
+
+/**
+ * Implements hook_help().
+ */
+function wysiwyg_asciimath_help($path, $arg) {
+  if ($path == 'admin/modules#description') {
+    return t('Allows users to post mathematical equations and plot graphs in Wysiwyg editor.');
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function wysiwyg_asciimath_menu() {
+  $items['admin/config/wysiwyg_asciimath'] = array(
+    'title' => 'Wysiwyg Ascii Math',
+    'description' => 'Configure settings for Wysiwyg Ascii Math.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('wysiwyg_asciimath_settings_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Settings form
+ */
+function wysiwyg_asciimath_settings_form() {
+  $form = array();
+  $form['wysiwyg_asciimath_cgi'] = array(
+    '#type' => 'textfield',
+    '#default_value' => _wysiwyg_asciimath_mimetex_path_var(),
+    '#title' => t('URL of mimetex file'),
+    '#description' =>
+      t('Enter a path to mimetex binary including the extension (which could be a .cgi or a .exe file).')
+      . '<br />' . t('It could be either a relative path (e.g. "%path ") to use mimetex binary hosted on this site or a full URL starting with "http" to use mimetex binary from another server.', array('%path' => _wysiwyg_asciimath_mimetex_path_var_default()))
+      . '<br />' . t('(You can visit <a href="http://www.forkosh.com/mimetex.html">this website</a> to download and install the binary.)'),
+  );
+
+  // Preview if mimetex is installed properly
+  $path = _wysiwyg_asciimath_mimetex_path();
+  $formula = 'f(x)=\int_{-\infty}^xe^{-t^2}dt'; // Any appealing TeX expression
+  $form['wysiwyg_asciimath_mimetex_test'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Verify mimetex installation'),
+    '#description' => t(
+      'If mimetex has been installed and configured properly, you should be able to see a formula rendered for the TeX string "%formula " below.',
+      array('%formula' => $formula)
+    ),
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+  );
+  $form['wysiwyg_asciimath_mimetex_test']['mimetex_preview'] = array(
+    '#type' => 'item',
+    '#markup' => '<img src="' . $path . '?' . rawurlencode($formula) . '" onerror="wwam_ImgError(this);" />'
+  );
+  drupal_add_js('function wwam_ImgError(img){img.onerror="";img.outerHTML="<p>'
+    . t('Error: File \"%path \" not found. Check your settings.', array('%path' => $path))
+    . '</p>"; return true; } ', array('type' => 'inline', 'scope' => JS_DEFAULT));
+
+  if (WWAM_USE_TEX_FILTER) {
+    $disabled = FALSE;
+    if (!function_exists('curl_init')) {
+      $disabled = TRUE;
+      drupal_set_message(t('CURL is not found on your server. You must enable CURL PHP module for caching to work for this module.  Talk to your server administrator about this module.'));
+    }
+
+    $mimetex_caching = function_exists('curl_init') && variable_get('wysiwyg_asciimath_mimetex_caching', FALSE);
+    $file_directory_path = _wysiwyg_asciimath_check_cache_dir(FALSE);
+    $form['wysiwyg_asciimath_mimetex_caching'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Mimetex Cache'),
+      '#default_value' => $mimetex_caching,
+      '#description' => t('Select to save images for ASCIIMath-TeX filter in cache instead of using mimetex all the time.')
+      . '<br />' . ($mimetex_caching
+        ? t('Disabling mimetex cache will delete %dir directory for cached files and all files in it.', array('%dir' => $file_directory_path))
+        : t('Enabling mimetex cache will create directory for cached files.')
+      ),
+      '#disabled' => $disabled,
+    );
+    $mimetex_caching = function_exists('curl_init') && variable_get('wysiwyg_asciimath_mimetex_caching', FALSE);
+    if ($mimetex_caching) {
+      // Verify that cache directory exists and is writable.
+      $file_directory_path = _wysiwyg_asciimath_check_cache_dir(TRUE, 'wysiwyg_asciimath_mimetex_caching');
+    }
+    else {
+      if ($file_directory_path) {
+        @rmdir($file_directory_path);
+        if (file_prepare_directory($file_directory_path)) {
+          drupal_set_message(t('Failed deleting directory %dir for mimetex cache.', array('%dir' => $file_directory_path)), 'status');
+        }
+        else {
+          drupal_set_message(t('Deleted directory %dir for mimetex cache.', array('%dir' => $file_directory_path)), 'status');
+        }
+      }
+    }
+  }
+  if (WWAM_USE_GRAPH_FILTER) {
+    $form['wysiwyg_asciimath_graph_width'] = array(
+      '#type' => 'textfield',
+      '#default_value' => variable_get('wysiwyg_asciimath_graph_width', '260'),
+      '#title' => t('Graph Dimension'),
+      '#description' => t('Enter the default dimension of the graphs.  Since they are square, we only need 1 dimension'),
+    );
+  }
+
+  return system_settings_form($form);
+}
+
+function _wysiwyg_asciimath_filter_search($format = -1, $text = '') {
+  // FIXME: implement
+  return $text;
+}
+
+/*
+ * Verify that cache directory exists and is writable.
+ */
+function _wysiwyg_asciimath_check_cache_dir($create = TRUE, $form_item = NULL) {
+  $file_directory_path = file_build_uri('/mimetex_cache');
+
+  // Verify that cache directory exists and is writable.
+  if ($create && !file_prepare_directory($file_directory_path)) {
+    // Try to create the directory if necessary.
+    if (!is_dir($file_directory_path)) {
+      @mkdir($file_directory_path);
+    }
+    // Set standard file permissions for webserver-generated files
+    @chmod($file_directory_path, 0775);
+    if (file_prepare_directory($file_directory_path)) {
+      if ($form_item) {
+        drupal_set_message(t('Created directory %dir for mimetex cache.', array('%dir' => $file_directory_path)), 'status');
+      }
+      if (!$form_item) {
+        watchdog('wysiwyg_asciimath', 'Created directory %dir for mimetex cache', array('%dir' => $file_directory_path), WATCHDOG_INFO, NULL);
+      }
+    }
+    else {
+      form_set_error($form_item, t('Cannot create directory %dir for mimetex cache.', array('%dir' => $file_directory_path)));
+      if (!$form_item) {
+        watchdog('wysiwyg_asciimath', 'Cannot create directory %dir for mimetex cache', array('%dir' => $file_directory_path), WATCHDOG_WARNING, NULL);
+      }
+    }
+  }
+
+  return file_prepare_directory($file_directory_path) ? $file_directory_path : FALSE;
+}
+
+function _wysiwyg_asciimath_filter_tex($format = -1, $text = '') {
+  // We make sure here that curl_init is enabled on this server.
+  // If CURL is not available - caching won't work.
+  $mimetex_caching = function_exists('curl_init') && variable_get('wysiwyg_asciimath_mimetex_caching', FALSE);
+
+  if ($mimetex_caching) {
+    // Verify that cache directory exists and is writable.
+    // We do this here in case something happens so we can
+    // deal with it on the fly if necessary.
+    $file_directory_path = _wysiwyg_asciimath_check_cache_dir(TRUE);
+
+    if (!$file_directory_path) {
+      $mimetex_caching = FALSE;
+    }
+  }
+
+  // Use absolute path if caching is enabled
+  $mimetex_path = _wysiwyg_asciimath_mimetex_path($mimetex_caching);
+
+
+  // do a match for all the equations that could be present
+  preg_match_all("#\[tex\](.*?)\[/tex\]#si", $text, $tex_matches);
+
+  // loop through each equation and find a match
+  for ($i = 0; $i < count($tex_matches[0]); $i++) {
+    $tex = $tex_matches[0][$i];
+    $mimetex_formula = $tex_matches[1][$i];
+    $pos = strpos($text, $tex);
+    $alt_mimetex_formula = htmlentities($mimetex_formula, ENT_QUOTES);
+    $alt_mimetex_formula = str_replace("\r","&#13;",$alt_mimetex_formula);
+    $alt_mimetex_formula = str_replace("\n","&#10;",$alt_mimetex_formula);
+
+    $cached_url = FALSE;
+    if ($mimetex_caching) {
+      // mimetex_caching
+      // Get the image with curl, save it using sha1
+      // as the file name and reference the saved image
+      // in the img tag.  We use sha1 to prevent file
+      // name collisions which is *much* better for
+      // this purpose than md5 which is used by mimetex
+      // if caching is enabled at compile time.
+      $formula_image_file = $file_directory_path . '/' . sha1($mimetex_formula) . '.gif';
+      $cached_url = file_create_url($formula_image_file);
+
+      if (!file_exists($cached_url)) {
+        $ch = curl_init($mimetex_path . '?' . rawurlencode($mimetex_formula));
+        $fp = fopen($formula_image_file, 'w');
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+        curl_exec($ch);
+        curl_close($ch);
+        fclose($fp);
+        // Double-check that file was created
+        if (!file_exists($cached_url)) {
+          $cached_url = FALSE;
+        }
+      }
+    }
+    if ($cached_url) {
+      $text = substr_replace($text, "<img src='" . $cached_url . "' title='" . $alt_mimetex_formula . "' alt='" . $alt_mimetex_formula . "' style=\"vertical-align: middle;\" >", $pos, strlen($tex));
+    }
+    else {
+      $text = substr_replace($text, "<img src='" . $mimetex_path . "?" . rawurlencode($mimetex_formula) . "' title='" . $alt_mimetex_formula . "' alt='" . $alt_mimetex_formula . "' style=\"vertical-align: middle;\" >", $pos, strlen($tex));
+    }
+  }
+
+  return $text;
+}
+
+function _wysiwyg_asciimath_filter_graph($format = -1, $text = '') {
+  // get default values
+  $graph_path = drupal_get_path('module', 'wysiwyg_asciimath') . '/wz_grapher/graphframe.php?';
+
+   // Get the defined width/height.
+  $graph_width  = variable_get('wysiwyg_asciimath_graph_width', '260');
+
+  // Find all the matches
+  preg_match_all("#\[graph\](.*?)\[/graph\]#si", $text, $graph_matches);
+
+  // Loop through each of them and replace for the iframe that contains the graph
+  // This isn't very efficient, but we have as yet figured out how to modify Walter Zorn's
+  // Grapher to allow for multiple graphs to be displayed on the same page.
+  for ($i = 0; $i < count($graph_matches[0]); $i++) {
+    $pos = strpos($text, $graph_matches[0][$i]);
+    $current_function = $graph_matches[1][$i];
+    $function = htmlentities($current_function, ENT_QUOTES);
+    $text = substr_replace($text, '<iframe frameborder="0" src="' . $graph_path . 'f=' . urlencode($function)
+      . '" style="display: block; width: ' . $graph_width . 'px; height: ' . $graph_width . 'px; border: 0px;" scrolling="no" ></iframe>',
+      $pos, strlen($graph_matches[0][$i]));
+  }
+
+  // Find all of the matches with x/y min/max settings
+  // FIXME: (no support for missing parts or out-of-order) - can do more smart capture and then decode params.
+  preg_match_all('#\[graph xmin="(.*?)" xmax="(.*?)" ymin="(.*?)" ymax="(.*?)"\](.*?)\[/graph\]#si', $text, $matches);
+
+  // Loop through and make the replacements.
+  for ($i = 0; $i < count($matches[0]); $i++) {
+    $pos = strpos($text, $matches[0][$i]);
+    $current_function = $matches[5][$i];
+    $function = htmlentities($current_function, ENT_QUOTES);
+    $text = substr_replace($text, '<iframe frameborder="0" src="' . $graph_path . 'f=' . urlencode($function)
+      . '&xmin=' . $matches[1][$i] . '&xmax=' . $matches[2][$i] . '&ymin=' . $matches[3][$i] . '&ymax=' . $matches[4][$i]
+      . '" style="display: block; width: ' . $graph_width . 'px; height: ' . $graph_width . 'px; border: 0px;" scrolling="no" ></iframe>',
+      $pos, strlen($matches[0][$i]));
+  }
+
+  return $text;
+}
+
+/**
+ * Implements hook_filter().
+ */
+function wysiwyg_asciimath_filter($op, $delta = 0, $format = -1, $text = '') {
+  switch ($op) {
+    case 'list':
+      $list = array(
+        0 => t('ASCIIMath-Search'),
+      );
+      if (WWAM_USE_TEX_FILTER) {
+        $list[1] = t('ASCIIMath-TeX');
+      }
+      if (WWAM_USE_GRAPH_FILTER) {
+        $list[2] = t('ASCIIMath-Graph');
+      }
+      return $list;
+
+    case 'description':
+      switch ($delta) {
+        case 0:
+          return t('Cleans up search results for mathematical equations between \`\` marks, [tex] and [/tex] tags, and function graphs between [graph] and [/graph] tags.');
+        case 1:
+          return WWAM_USE_TEX_FILTER ? t('Allows users to post mathematical equations between [tex] and [/tex] tags.') : '';
+        case 2:
+          return WWAM_USE_GRAPH_FILTER ? t('Allows users to post function graphs between [graph] and [/graph] tags.') : '';
+      }
+
+    case 'prepare':
+      return $text;
+
+    case "process":
+      switch ($delta) {
+        case 0:
+          return _wysiwyg_asciimath_filter_search($format, $text);
+        case 1:
+          return WWAM_USE_TEX_FILTER ? _wysiwyg_asciimath_filter_tex($format, $text) : '';
+        case 2:
+          return WWAM_USE_GRAPH_FILTER ? _wysiwyg_asciimath_filter_graph($format, $text) : '';
+      }
+  }
+  return $text;
+}
+
+/**
+ * Implements hook_wysiwyg_plugin().
+ */
+function wysiwyg_asciimath_wysiwyg_plugin($editor) {
+  switch ($editor) {
+    case 'tinymce':
+      // Load our invocation scripts.
+      $path = drupal_get_path('module', 'wysiwyg_asciimath');
+      // drupal_add_js($path . '/tinymce/asciimath/js/ASCIIMathMLwFallback.js');
+      // drupal_add_js($path . '/tinymce/asciisvg/js/ASCIIsvgPI.js');
+
+      return array(
+// SEE http://drupal.org/files/issues/wysiwyg_api_documentation.patch
+        'asciimath' => array(
+          'path' => $path . '/tinymce/asciimath',
+          'filename' => 'editor_plugin.js',
+          'buttons' => array('asciimath' => t('ASCIIMath'), 'asciimathcharmap' => t('ASCIIMathCharmap')),
+          'url' => 'http://www.imathas.com/editordemo/demo.html',
+          'load' => TRUE
+        ),
+        'asciisvg' => array(
+          'path' => $path . '/tinymce/asciisvg',
+          'filename' => 'editor_plugin.js',
+          'buttons' => array('asciisvg' => t('ASCIIGraph')),
+          'url' => 'http://www.imathas.com/editordemo/demo.html',
+          'load' => TRUE
+        ),
+      );
+  }
+}
+
+/**
+ * Implements hook_init().
+ */
+function wysiwyg_asciimath_init() {
+  $path = drupal_get_path('module', 'wysiwyg_asciimath');
+  drupal_add_js($path . '/tinymce/asciimath/js/ASCIIMathMLwFallback.js');
+  drupal_add_js($path . '/tinymce/asciisvg/js/ASCIIsvgPI.js');
+
+  // js configuration variables
+  // FIXME: convert drupal_add_js to 'setting' (involves changing to Drupal.*** namespace in js)
+  $mimetex_path = _wysiwyg_asciimath_mimetex_path();
+  $path = _wysiwyg_asciimath_base_path() . $path;
+  drupal_add_js('
+    var AMTcgiloc = "' . addslashes(check_plain($mimetex_path)) . '";
+    var AScgiloc = "' . $path . '/svgimg/svgimg.php";
+    var ASdloc = "' . $path . '/tinymce/asciisvg/js/d.svg";',
+    array('type' => 'inline', 'scope' => JS_DEFAULT)
+  );
+
+
+//    <!-- Some integration calls -->
+//    <a href="javascript:;" onmousedown="tinyMCE.get('elm1').show();">[Show]</a>
+//    <a href="javascript:;" onmousedown="tinyMCE.get('elm1').hide();">[Hide]</a>
+//    <a href="javascript:;" onmousedown="alert(tinyMCE.get('elm1').getContent());">[Get contents]</a>
+//    <a href="javascript:;" onmousedown="alert(tinyMCE.get('elm1').selection.getContent());">[Get selected HTML]</a>
+//    <a href="javascript:;" onmousedown="alert(tinyMCE.get('elm1').selection.getContent({format : 'text'}));">[Get selected text]</a>
+}

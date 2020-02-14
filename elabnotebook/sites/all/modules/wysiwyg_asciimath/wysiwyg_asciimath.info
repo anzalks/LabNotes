@@ -1,0 +1,19 @@
+name = Wysiwyg ASCII Math
+description = "Wysiwyg editor plugin and input filters converting plain text/ASCII math into equations and graphs."
+dependencies[] = wysiwyg
+package = "User interface"
+core = 7.x
+configure = admin/config/wysiwyg_asciimath
+
+
+files[] = wysiwyg_asciimath.module
+files[] = wysiwyg_asciimath.install
+;?files[] = svgimg/asciisvgimg.php
+
+
+; Information added by drupal.org packaging script on 2013-10-26
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "wysiwyg_asciimath"
+datestamp = "1382797362"
+

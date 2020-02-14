@@ -1,0 +1,12 @@
+
+Go to http://www.forkosh.com/mimetex.html to download the latest version.
+
+Download the binary version appropriate for your server's OS.
+
+Uncompress and copy mimetex.cgi to this directory (wysiwyg_asciimath/mimetex).
+
+Make sure that mimetex.cgi has execute permission set 
+(chmod 755 mimetex.cgi in Linux/Unix).
+
+There are some instructions provided at the above URL for compiling from 
+source, should you have any troubles running the binary.

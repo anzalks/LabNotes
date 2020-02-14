@@ -1,0 +1,10 @@
+#<Directory />
+#  AllowOverride none 
+  Options -indexes +ExecCGI 
+  Order allow,deny 
+  Allow from all 
+#</Directory>
+
+<IfModule mime_module>
+  AddHandler cgi-script .cgi
+</IfModule>

@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * @file
+ * Installs the wysiwyg_asciimath module
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function wysiwyg_asciimath_uninstall() {
+  variable_del('wysiwyg_asciimath_cgi');
+  variable_del('wysiwyg_asciimath_mimetex_caching');
+  variable_del('wysiwyg_asciimath_graph_width');
+}

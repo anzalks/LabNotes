@@ -1,0 +1,5 @@
+
+TODO:
+
+- Need a way to manage stale images in svgimg/imgs.
+- Need a test for mimetex.cgi - location? permission? test formula?

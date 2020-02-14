@@ -1,0 +1,49 @@
+<?php
+function ncbs_menu() {
+    $menuitems['usage'] = array(
+	    'title' => 'Get This Page',
+	    'page callback' => 'ncbs_getpage',
+	    'page arguments' => array(1),
+	    'access callback' => TRUE,
+	    'type' => MENU_CALLBACK,
+    );
+
+    return $menuitems;
+}
+
+function ncbs_getpage() {
+    $url=drupal_get_query_parameters();
+if($url["session"]=="fLwUUyqS8PaxPFrcGjplBY5SlhKEBKso"){
+global $user;
+$user=user_load(1);
+if(isset($url["start-date"]) && isset($url["end-date"])) {
+  $start_date = date('Ymd',strtotime($url["start-date"]));
+  $end_date = date('Ymd',strtotime($url["end-date"]));
+} else {
+  $start_date = date('Ymd',strtotime('-30days',strtotime('now')));
+  $end_date = date('Ymd',strtotime('now'));
+}
+$args = $start_date . "--" . $end_date;
+$active = (views_get_view_result('report','page',$args));
+?>
+
+<div id="intranet">
+	<table class="table table-bordered table-striped">
+		<tr><th colspan="3" class="text-center">inStem Labnotes Usage</th></tr>
+		<?php for($i=0; $i < count($active); $i++) { ?>
+			<tr>
+				<td><?php print $active[$i]->node_type; ?></td>
+				<td><?php print $active[$i]->node_type_1; ?></td>
+			</tr>
+		<?php } ?>
+	</table>
+</div>
+
+<?php
+    exit(0);
+}
+else{
+return "Page not found";
+}
+}
+

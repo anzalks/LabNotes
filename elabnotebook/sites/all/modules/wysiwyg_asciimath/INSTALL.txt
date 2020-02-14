@@ -1,0 +1,39 @@
+
+To enable this module, follow these instructions.
+
+1. Upload it to your sies/all/modules folder and enable it on the admin/build/modules page.
+
+2. Install mimetex.cgi
+
+In order to use the ASCIIMath and ASCIIMathCharmap, you will need to download the appropriate Mimetex binary and install it on your server (usually just uploading it to the cgi-bin directory of your website is sufficient on a Linux server).
+
+The binaries are available from http://www.forkosh.com/mimetex.html, where some instructions can be found on the syntax of the derivative of TeX that this filter is using.
+
+Copy one of available mimetex.cgi (one appropriate for your server's OS) into wysiwyg_asciimath/mimetex.
+
+3. Test your mimetex.cgi by visiting this URL (where example.com is your website):
+http://www.example.com/sites/all/modules/wysiwyg_asciimath/mimetex/mimetex.cgi?(a+b)
+You should see a valid image with the formula (a+b)
+
+Depending on your server configuration, you may need to place CGI files into different location, such as .../public_html/cgi-bin.
+
+You also need to make sure that mimetex.cgi has executable permission set. Consult with your ISP on how to do it.
+
+In some rare cases you may need to compile mimetex.cgi from source on your server. Your ISP may be able to assist with it.
+
+4. Make sure that the paths in admin/settings/wysiwyg_asciimath are configured for the mimetex.cgi on your server.
+
+5. Test that svgimg script is working by visiting this URL (where example.com is your website):
+http://www.example.com/sites/all/modules/wysiwyg_asciimath/svgimg/svgimg.php?sscr=-3,3,-2,2,.5,1,1,.5,1,500,200,func,cos(x*pi),null,0,0,,,black,1,none,func,sin(x*pi),null,0,0,,,blue,3,none
+
+Note: SvgImg Requires GD2 and Freetype for full functionality
+
+6. Configure one of your WYSIWYG profiles to show TinyMCE buttons:
+ - ASCIIMath
+ - ASCIIMathCharmap
+ - ASCIIGraph
+
+7. Make sure that the input filter you configured in the WYSIWYG profile allows <img> and <embed> tags.
+
+8. Verify that TinyMCE shows the new buttons when you edit a page using your WYSISWYG profile, and these buttons work.
+

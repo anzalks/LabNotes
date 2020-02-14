@@ -1,0 +1,37 @@
+wysiwyg_asciimath 7.x-1.x-dev
+-----------------------------
+[#1412306] by seren10pity: created Drupal 7 port, by iva2k: coding standards update
+
+
+wysiwyg_asciimath 6.x-1.x-dev
+-----------------------------
+
+
+wysiwyg_asciimath 6.x-1.3, 2012-05-02
+-------------------------------------
+[NOISSUE] by iva2k: Updated to upstream's ver 0.31  8/15/11: Making plugins compatible with TinyMCE 3.4.4. Added SVG support for IE9 and newer Webkit.
+[NOISSUE] by iva2k: Updated to upstream's ver 0.32  8/29/11: Fixed math edit in Chrome, and column vector issues
+[NOISSUE] by iva2k: Added double-click handler to ASCIIGraph that opens edit dialog
+[#818636] by iva2k: Site Configuration -> Wysiwyg Ascii Math settings not working
+[NOISSUE] by iva2k: Added mimetex installation verification to the configuration page
+[NOISSUE] by iva2k: Added absolute path capability to mimetex location, fixed for non-empty base URL
+[#1525180] Wysiwyg ASCII Math uses "undefined" path for a graph placeholder
+
+
+wysiwyg_asciimath 6.x-1.2, 2011-08-29
+-------------------------------------
+wysiwyg_asciimath 6.x-1.1, 2009-06-10
+-------------------------------------
+#487242 by iva2k: Added 'load' => TRUE code, since new WysiwygAPI 6.x-2.0 became picky about that.
+
+
+wysiwyg_asciimath 6.x-1.0, 2009-05-23
+-------------------------------------
+First Release.
+
+
+wysiwyg_asciimath 6.x-0.1, 2009-05-21
+-------------------------------------
+Initial fork of TinyMCE plugins asciimath, asciisvg ver 0.16 into drupal module (2009-05-21).
+
+

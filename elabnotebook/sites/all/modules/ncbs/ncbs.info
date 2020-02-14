@@ -1,0 +1,6 @@
+;$Id$
+name = NCBS
+description = Custom NCBS Module
+package = NCBS
+core = 7.x
+files[] = ncbs.module

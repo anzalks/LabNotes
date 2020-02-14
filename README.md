@@ -18,7 +18,7 @@ Example: Site name change, admin email-id and password change.
 username:  **admin**  
 password: **ElectronicLABnotebook@20!9**
 
-test user for Faculty's Lab  [Where "Faculty's Lab" is an example to "Dr. Ramesh Lab"]
+test user for Faculty's Lab  [Where "Faculty's Lab" is an example to "Dr. Ramesh Lab"]  
 username : **test-user1-facilty**  
 password: **test12**
 

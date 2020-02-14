@@ -47,6 +47,8 @@ copy text and change the content type machine name and then import again.
 > j) In **Administration » Structure » Blocks -> Lab Members** , select the new faculty role to access the block.
 
 
------------------------------------------------End---------------------------------------------------------------
+-----------------------------------------------End------------------------------
 
+Note: - We will NOT include any copyright material or sensitive information (like email address) into this repository. Due to privacy reasons, We could not extend further help in Installation/Configuration of Labnotes. 
 
+Any such request will not be entertained. User has to arrange setup their own server.
